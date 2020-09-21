@@ -1,0 +1,86 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: modm/riscv-gcc-prerequisites:latest
+    steps:
+      - checkout
+      # - run:
+      #     name: Fake Build Toolchain
+      #     command: |
+      #       mkdir -p riscv-gcc
+      #       echo `date` > riscv-gcc/toolchain.txt
+      #       echo `git describe --tags` >> riscv-gcc/toolchain.txt
+      - run:
+          name: Build Toolchain
+          command: |
+            cd /work
+            cp /root/project/build.sh .
+            bash build.sh
+          no_output_timeout: 3600
+      - run:
+          name: Create Tarball
+          command: |
+            mkdir -p workspace
+            cp -r test/ workspace/
+            tar cjf workspace/riscv-gcc.tar.bz2 -C /opt riscv-gcc
+      - store_artifacts:
+          path: workspace/riscv-gcc.tar.bz2
+          destination: riscv-gcc.tar.bz2
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - test
+            - riscv-gcc.tar.bz2
+  test:
+    docker:
+      - image: modm/riscv-gcc-prerequisites:latest
+    steps:
+      - attach_workspace:
+          at: workspace
+      - run:
+          name: Unpack Toolchain
+          command: tar xf workspace/riscv-gcc.tar.bz2 --directory /opt
+      - run:
+          name: Compiling test files
+          command: |
+            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ --version
+            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ workspace/test/main1.cpp
+  deploy:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - checkout
+      - attach_workspace:
+          at: workspace
+      - run:
+          name: Get GHR
+          command: go get github.com/tcnksm/ghr
+      - run:
+          name: Deploy
+          command: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `git describe --tags` workspace/riscv-gcc.tar.bz2
+
+workflows:
+  version: 2
+
+  build-test-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^v.*/
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+          requires:
+            - build
+      # Only run when pushing a tag!
+      - deploy:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+          requires:
+            - test
