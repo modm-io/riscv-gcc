@@ -4,25 +4,31 @@ jobs:
     docker:
       - image: modm/riscv-gcc-prerequisites:latest
     steps:
-      - checkout
-      # - run:
-      #     name: Fake Build Toolchain
-      #     command: |
-      #       mkdir -p riscv-gcc
-      #       echo `date` > riscv-gcc/toolchain.txt
-      #       echo `git describe --tags` >> riscv-gcc/toolchain.txt
       - run:
-          name: Build Toolchain
+          name: Git Clone
           command: |
-            cd /work
-            cp /root/project/build.sh .
-            bash build.sh
+            git clone --recursive --jobs 16 https://github.com/riscv/riscv-gnu-toolchain
+      - run:
+          name: Configure
+          command: |
+            cd riscv-gnu-toolchain
+            ./configure --prefix=/opt/riscv-gcc
+      - run:
+          name: Build
+          command: |
+            cd riscv-gnu-toolchain
+            make -j4
           no_output_timeout: 3600
+      - run:
+          name: Compiling test files
+          command: |
+            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ --version
+            echo "int main() { return 0;}" > main1.cpp
+            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ main1.cpp
       - run:
           name: Create Tarball
           command: |
             mkdir -p workspace
-            cp -r test/ workspace/
             tar cjf workspace/riscv-gcc.tar.bz2 -C /opt riscv-gcc
       - store_artifacts:
           path: workspace/riscv-gcc.tar.bz2
@@ -32,25 +38,10 @@ jobs:
           paths:
             - test
             - riscv-gcc.tar.bz2
-  test:
-    docker:
-      - image: modm/riscv-gcc-prerequisites:latest
-    steps:
-      - attach_workspace:
-          at: workspace
-      - run:
-          name: Unpack Toolchain
-          command: tar xf workspace/riscv-gcc.tar.bz2 --directory /opt
-      - run:
-          name: Compiling test files
-          command: |
-            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ --version
-            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ workspace/test/main1.cpp
   deploy:
     docker:
       - image: circleci/golang:latest
     steps:
-      - checkout
       - attach_workspace:
           at: workspace
       - run:
@@ -63,18 +54,12 @@ jobs:
 workflows:
   version: 2
 
-  build-test-deploy:
+  build-deploy:
     jobs:
       - build:
           filters:
             tags:
               only: /^v.*/
-      - test:
-          filters:
-            tags:
-              only: /^v.*/
-          requires:
-            - build
       # Only run when pushing a tag!
       - deploy:
           filters:
@@ -83,4 +68,4 @@ workflows:
             tags:
               only: /^v.*/
           requires:
-            - test
+            - build
