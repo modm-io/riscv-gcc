@@ -1,6 +1,6 @@
 # Up-to-date RISC-V GNU GCC Toolchain from source
 
-[![CircleCI](https://circleci.com/gh/modm-ext/docker-riscv-gcc.svg?style=svg)](https://circleci.com/gh/modm-ext/docker-riscv-gcc)
+[![CircleCI](https://circleci.com/gh/modm-ext/riscv-gcc.svg?style=svg)](https://circleci.com/gh/modm-ext/riscv-gcc)
 
 ## Installation
 
