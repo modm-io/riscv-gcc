@@ -1,5 +1,6 @@
 version: 2
 jobs:
+
   build:
     docker:
       - image: modm/riscv-gcc-prerequisites:latest
@@ -7,7 +8,7 @@ jobs:
       - run:
           name: Git Clone
           command: |
-            git clone --recursive --jobs 16 https://github.com/riscv/riscv-gnu-toolchain
+            git clone --recursive --jobs 16 --quiet https://github.com/riscv/riscv-gnu-toolchain
       - run:
           name: Configure
           command: |
@@ -18,13 +19,17 @@ jobs:
           command: |
             cd riscv-gnu-toolchain
             make -j4
-          no_output_timeout: 3600
       - run:
           name: Compiling test files
           command: |
             /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ --version
             echo "int main() { return 0;}" > main1.cpp
             /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ main1.cpp
+      #- run:
+      #    name: Fake toolchain
+      #    command: |
+      #      mkdir -p /opt/riscv-gcc/bin
+      #      cp $(which true) /opt/riscv-gcc/bin/riscv64-unknown-elf-g++
       - run:
           name: Create Tarball
           command: |
@@ -36,8 +41,8 @@ jobs:
       - persist_to_workspace:
           root: workspace
           paths:
-            - test
             - riscv-gcc.tar.bz2
+
   deploy:
     docker:
       - image: circleci/golang:latest
@@ -49,7 +54,7 @@ jobs:
           command: go get github.com/tcnksm/ghr
       - run:
           name: Deploy
-          command: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `git describe --tags` workspace/riscv-gcc.tar.bz2
+          command: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME $CIRCLE_TAG workspace/riscv-gcc.tar.bz2
 
 workflows:
   version: 2
