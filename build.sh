@@ -5,7 +5,7 @@ git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
 cd riscv-gnu-toolchain
 
 # Configure
-./configure --prefix=/opt/riscv-gcc
+./configure --prefix=/opt/modm-riscv-gcc --enable-multilib
 
 # Build
 make -j4

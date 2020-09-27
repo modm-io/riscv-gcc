@@ -9,11 +9,12 @@ jobs:
           name: Git Clone
           command: |
             git clone --recursive --jobs 16 --quiet https://github.com/riscv/riscv-gnu-toolchain
+          no_output_timeout: 20m
       - run:
           name: Configure
           command: |
             cd riscv-gnu-toolchain
-            ./configure --prefix=/opt/riscv-gcc
+            ./configure --prefix=/opt/modm-riscv-gcc --enable-multilib
       - run:
           name: Build
           command: |
@@ -22,9 +23,9 @@ jobs:
       - run:
           name: Compiling test files
           command: |
-            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ --version
+            /opt/modm-riscv-gcc/bin/riscv64-unknown-elf-g++ --version
             echo "int main() { return 0;}" > main1.cpp
-            /opt/riscv-gcc/bin/riscv64-unknown-elf-g++ main1.cpp
+            /opt/modm-riscv-gcc/bin/riscv64-unknown-elf-g++ main1.cpp
       #- run:
       #    name: Fake toolchain
       #    command: |
@@ -34,14 +35,14 @@ jobs:
           name: Create Tarball
           command: |
             mkdir -p workspace
-            tar cjf workspace/riscv-gcc.tar.bz2 -C /opt riscv-gcc
+            tar cjf workspace/modm-riscv-gcc.tar.bz2 -C /opt modm-riscv-gcc
       - store_artifacts:
-          path: workspace/riscv-gcc.tar.bz2
-          destination: riscv-gcc.tar.bz2
+          path: workspace/modm-riscv-gcc.tar.bz2
+          destination: modm-riscv-gcc.tar.bz2
       - persist_to_workspace:
           root: workspace
           paths:
-            - riscv-gcc.tar.bz2
+            - modm-riscv-gcc.tar.bz2
 
   deploy:
     docker:
@@ -54,7 +55,7 @@ jobs:
           command: go get github.com/tcnksm/ghr
       - run:
           name: Deploy
-          command: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME $CIRCLE_TAG workspace/riscv-gcc.tar.bz2
+          command: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME $CIRCLE_TAG workspace/modm-riscv-gcc.tar.bz2
 
 workflows:
   version: 2

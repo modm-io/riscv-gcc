@@ -4,18 +4,18 @@
 
 ## Installation
 
-Download the latest `riscv-gcc.tar.bz2` from [Releases](https://github.com/modm-ext/docker-riscv-gcc/releases)
+Download the latest `modm-riscv-gcc.tar.bz2` from [Releases](https://github.com/modm-ext/docker-riscv-gcc/releases)
 and unpack it to `/opt`:
 
 ```sh
-tar xf riscv-gcc.tar.bz2 --directory /opt
+tar xf modm-riscv-gcc.tar.bz2 --directory /opt
 ```
 
 Add the `bin/` directorie(s?) to your `$PATH`,
 e.g. by adding the following line to your `~/.bashrc` file:
 
 ```sh
-export PATH="/opt/riscv-gcc/bin:$PATH"
+export PATH="/opt/modm-riscv-gcc/bin:$PATH"
 ```
 
 ## Building locally with Docker
@@ -47,7 +47,7 @@ cd docker-riscv-gcc
 time ./build.sh
 ```
 
-The toolchain will be in `/opt/riscv-gcc`.
+The toolchain will be in `/opt/modm-riscv-gcc`.
 
 ## Building in CircleCI
 
