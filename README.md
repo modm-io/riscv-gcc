@@ -1,10 +1,8 @@
 # Up-to-date RISC-V GNU GCC Toolchain from source
 
-[![CircleCI](https://circleci.com/gh/modm-ext/riscv-gcc.svg?style=svg)](https://circleci.com/gh/modm-ext/riscv-gcc)
-
 ## Installation
 
-Download the latest `modm-riscv-gcc.tar.bz2` from [Releases](https://github.com/modm-ext/docker-riscv-gcc/releases)
+Download the latest `modm-riscv-gcc.tar.bz2` from [Releases](https://github.com/modm-io/riscv-gcc/releases)
 and unpack it to `/opt`:
 
 ```sh
@@ -18,40 +16,14 @@ e.g. by adding the following line to your `~/.bashrc` file:
 export PATH="/opt/modm-riscv-gcc/bin:$PATH"
 ```
 
-## Building locally with Docker
+## Building local
 
-There is a Docker image with all prerequisites for building, created from the `Dockerfile` in this repository.
-Pull and start the image from Dockerhub with:
+The build script is written for Ubuntu 20.04.
 
-```sh
-docker run -it modm/riscv-gcc-prerequisites
-```
-
-Or build the image from the local `Dockerfile` and start it:
+Just run the build.sh script:
 
 ```sh
-docker build --tag riscv-gcc-prerequisites:local .
-docker run -it riscv-gcc-prerequisites:local
-```
-
-Inside the Docker container get this repository
-
-```sh
-git clone https://github.com/modm-ext/docker-riscv-gcc.git
-```
-
-Run the build.sh script
-
-```sh
-cd docker-riscv-gcc
-time ./build.sh
+./build.sh
 ```
 
 The toolchain will be in `/opt/modm-riscv-gcc`.
-
-## Building in CircleCI
-
-There is a CircleCI job defined in `.circleci/config.yml` which builds the
-toolchain using the Docker container. For tagged commits, a Github release
-will be created with the toolchain put into a downloadable `.tar.bz2` at
-[Releases](https://github.com/modm-ext/docker-riscv-gcc/releases).

@@ -1,0 +1,74 @@
+name: Build RISC-V GCC
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-risc-v-gcc:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install dependencies
+        run: |
+         sudo apt-get update
+         sudo apt-get upgrade -y
+         sudo apt-get install -y autoconf automake autotools-dev curl python3 libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev git
+
+      - name: Clone riscv/riscv-gnu-toolchain
+        run: |
+         git clone --recursive --jobs 16 --quiet https://github.com/riscv/riscv-gnu-toolchain
+
+      - name: Configure
+        run: |
+         cd riscv-gnu-toolchain
+         ./configure --prefix=/opt/modm-riscv-gcc --enable-multilib
+
+      - name: Build
+        run: |
+         cd riscv-gnu-toolchain
+         make -j8
+
+      - name: Compiling test files
+        run: |
+         /opt/modm-riscv-gcc/bin/riscv64-unknown-elf-g++ --version
+         echo "int main() { return 0;}" > main1.cpp
+         /opt/modm-riscv-gcc/bin/riscv64-unknown-elf-g++ main1.cpp
+
+      #- name: Fake toolchain
+      #  run: |
+      #   mkdir -p /opt/riscv-gcc/bin
+      #   cp $(which true) /opt/riscv-gcc/bin/riscv64-unknown-elf-g++
+
+      - name: Create tarball
+        run: |
+         tar cjf modm-riscv-gcc.tar.bz2 -C /opt modm-riscv-gcc
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: modm-riscv-gcc
+          path: modm-riscv-gcc.tar.bz2
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: RISC-V GCC ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./modm-riscv-gcc.tar.bz2
+          asset_name: modm-riscv-gcc.tar.bz2
+          asset_content_type: application/x-bzip2
