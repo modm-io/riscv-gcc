@@ -1,4 +1,8 @@
-# Up-to-date RISC-V GNU GCC Toolchain from source
+# DEPRECATED
+
+### Please switch to another GCC distribution, e.g. from [Embecosm](https://www.embecosm.com/resources/tool-chain-downloads/#riscv-stable).
+
+# RISC-V GNU GCC Toolchain from source
 
 ## Installation
 
